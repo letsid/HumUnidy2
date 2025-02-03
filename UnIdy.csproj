@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<UseWindowsForms>true</UseWindowsForms>
+		<PlatformTarget>x64</PlatformTarget>
+		<LangVersion>latest</LangVersion>
+		<DebugType>embedded</DebugType>
+		<PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
+		<EmbedAllSources>true</EmbedAllSources>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="ExileCore2">
+			<HintPath>$(exileCore2Package)\ExileCore2.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="GameOffsets2">
+			<HintPath>$(exileCore2Package)\GameOffsets2.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="InputHumanizerLib">
+			<HintPath>$(exileCore2Package)\InputHumanizerLib.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="System" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Windows.Forms" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Net.Http" />
+		<Reference Include="System.Xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="Constants.cs" />
+		<Compile Include="UnIdy.cs" />
+		<Compile Include="Properties\AssemblyInfo.cs" />
+		<Compile Include="Properties\Resources.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DesignTime>True</DesignTime>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Include="Settings.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+	</ItemGroup>
+</Project>
