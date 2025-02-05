@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -11,7 +11,6 @@ using ExileCore2.PoEMemory.Elements.InventoryElements;
 using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared;
 using ExileCore2.Shared.Enums;
-using System.Drawing;
 using InputHumanizer.Input;
 
 namespace UnIdy
@@ -21,7 +20,6 @@ namespace UnIdy
         private IngameState _ingameState;
         private Vector2 _windowOffset;
         private SyncTask<bool> _currentOperation;
-        private IInputController _inputController;
 
         public UnIdy()
         {
@@ -54,7 +52,7 @@ namespace UnIdy
                 if (inventoryPanel != null && inventoryPanel.IsVisible &&
                     Input.IsKeyDown(Settings.HotKey.Value))
                 {
-                    LogMessage("Hotkey pressed"); // Debug message
+                    LogMessage("Hotkey pressed", 5);
                     _currentOperation = Identify();
                 }
             }
@@ -76,7 +74,6 @@ namespace UnIdy
                 }
 
                 var playerInventory = inventoryPanel[InventoryIndex.PlayerInventory];
-
                 var scrollOfWisdom = GetItemWithBaseName(
                     "Metadata/Items/Currency/CurrencyIdentification",
                     playerInventory.VisibleInventoryItems);
@@ -105,9 +102,8 @@ namespace UnIdy
                     }
                 }
 
-                var listOfNormalInventoryItemsToIdentify = GetItemsToIdentify(normalInventoryItems);
-
-                if (listOfNormalInventoryItemsToIdentify.Count == 0)
+                var itemsToIdentify = GetItemsToIdentify(normalInventoryItems);
+                if (itemsToIdentify.Count == 0)
                 {
                     return false;
                 }
@@ -119,31 +115,38 @@ namespace UnIdy
                     return false;
                 }
 
-                if ((_inputController = tryGetInputController(this.Name)) != null)
+                // Process items in smaller chunks to prevent holding the input controller too long
+                foreach (var chunk in itemsToIdentify.Chunk(5))
                 {
-                    using (_inputController)
+                    var inputController = tryGetInputController(this.Name);
+                    if (inputController == null)
+                    {
+                        LogError("Failed to get input controller for chunk.");
+                        continue;
+                    }
+
+                    using (inputController)
                     {
                         var scrollCenter = scrollOfWisdom.GetClientRect().Center;
-                        await _inputController.Click(MouseButtons.Right, new Vector2(scrollCenter.X, scrollCenter.Y) + _windowOffset);
-                        await Task.Delay(200);
+                        await inputController.Click(MouseButtons.Right, new Vector2(scrollCenter.X, scrollCenter.Y) + _windowOffset);
+                        await inputController.KeyDown(Keys.LShiftKey);
 
-                        await _inputController.KeyDown(Keys.LShiftKey);
-                        
-                        foreach (var normalInventoryItem in listOfNormalInventoryItemsToIdentify)
+                        foreach (var item in chunk)
                         {
                             if (Settings.Debug.Value)
                             {
-                                Graphics.DrawFrame(normalInventoryItem.GetClientRect(), Color.AliceBlue, 2);
+                                Graphics.DrawFrame(item.GetClientRect(), System.Drawing.Color.AliceBlue, 2);
                             }
 
-                            var itemCenter = normalInventoryItem.GetClientRect().Center;
-                            await _inputController.Click(MouseButtons.Left, new Vector2(itemCenter.X, itemCenter.Y) + _windowOffset);
-
-                            await Task.Delay(Constants.WHILE_DELAY + Settings.ExtraDelay.Value);
+                            var itemCenter = item.GetClientRect().Center;
+                            await inputController.Click(MouseButtons.Left, new Vector2(itemCenter.X, itemCenter.Y) + _windowOffset);
                         }
-                        
-                        await _inputController.KeyUp(Keys.LShiftKey);
+
+                        await inputController.KeyUp(Keys.LShiftKey);
                     }
+
+                    // Brief delay between chunks to allow other plugins access
+                    await Task.Delay(50);
                 }
 
                 return true;
